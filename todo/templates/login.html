@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TASKRANT // Login</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #ff4655;
+      --red-dark: #cc2233;
+      --red-glow: rgba(255, 70, 85, 0.25);
+      --bg: #0f1923;
+      --surface: #1a2634;
+      --surface2: #111e2b;
+      --border: #2a3f55;
+      --text: #ece8e1;
+      --muted: #7b8fa1;
+      --green: #00ff9d;
+    }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    canvas#particles {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(255,70,85,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,70,85,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .scan-line {
+      position: fixed;
+      left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(255,70,85,0.4), transparent);
+      animation: scan 5s linear infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+    @keyframes scan { 0%{top:0;opacity:0;} 5%{opacity:1;} 95%{opacity:1;} 100%{top:100vh;opacity:0;} }
+
+    .wrapper {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      max-width: 420px;
+      padding: 1rem;
+      animation: fadeSlideIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(30px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .brand {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+    .brand-logo {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 42px;
+      font-weight: 700;
+      color: var(--red);
+      letter-spacing: 8px;
+      text-transform: uppercase;
+      position: relative;
+      display: inline-block;
+    }
+    .brand-logo.glitch {
+      animation: glitch 0.2s linear;
+    }
+    @keyframes glitch {
+      0%   { text-shadow: none; transform: translate(0); }
+      20%  { text-shadow: -3px 0 #00ffff, 3px 0 #ff00ff; transform: translate(-2px,1px); }
+      40%  { text-shadow: 3px 0 #00ffff, -3px 0 #ff00ff; transform: translate(2px,-1px); }
+      60%  { text-shadow: -3px 0 #00ffff; transform: translate(-1px,0); }
+      80%  { text-shadow: 3px 0 #ff00ff; transform: translate(1px,0); }
+      100% { text-shadow: none; transform: translate(0); }
+    }
+    .brand-sub {
+      font-size: 10px;
+      letter-spacing: 5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: 4px;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--red);
+      position: relative;
+      padding: 2.5rem 2rem;
+      clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px));
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,70,85,0.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .card-corner { position: absolute; width: 24px; height: 24px; }
+    .card-corner.tl { top: -1px; left: -1px; border-top: 2px solid var(--red); border-left: 2px solid var(--red); }
+    .card-corner.br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--red); border-right: 2px solid var(--red); }
+    .card-corner.tr { top: -1px; right: 23px; width: 2px; height: 8px; background: var(--red); }
+    .card-corner.bl { bottom: -1px; left: 23px; width: 2px; height: 8px; background: var(--red); }
+
+    .slash-accent {
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 3px;
+      height: 80px;
+      background: linear-gradient(to bottom, transparent, var(--red), transparent);
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 1.75rem;
+      padding: 6px 12px;
+      background: rgba(255,70,85,0.06);
+      border: 1px solid rgba(255,70,85,0.15);
+      clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+    }
+    .status-dot {
+      width: 6px; height: 6px;
+      background: var(--green);
+      border-radius: 50%;
+      animation: blink 2s infinite;
+      flex-shrink: 0;
+    }
+    @keyframes blink { 0%,100%{opacity:1;} 50%{opacity:0.2;} }
+    .status-text { font-size: 10px; letter-spacing: 2px; color: var(--green); text-transform: uppercase; }
+
+    .field { margin-bottom: 1.25rem; }
+    .field label {
+      display: block;
+      font-size: 10px;
+      letter-spacing: 2.5px;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 6px;
+    }
+    .field-wrap { position: relative; }
+    .field-wrap i {
+      position: absolute;
+      left: 12px; top: 50%;
+      transform: translateY(-50%);
+      color: var(--muted);
+      font-size: 15px;
+      pointer-events: none;
+      transition: color 0.2s;
+    }
+    .field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 14px;
+      padding: 11px 12px 11px 38px;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field input::placeholder { color: #3a5068; }
+    .field input:focus { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-glow); }
+    .field input:focus + i,
+    .field-wrap:focus-within i { color: var(--red); }
+
+    .error-msg {
+      background: rgba(255,70,85,0.1);
+      border: 1px solid rgba(255,70,85,0.4);
+      color: var(--red);
+      font-size: 12px;
+      padding: 8px 12px;
+      margin-bottom: 1rem;
+      letter-spacing: 0.5px;
+      clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 0 100%);
+    }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--red);
+      color: #0f1923;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      border: none;
+      padding: 13px;
+      cursor: pointer;
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+      margin-top: 0.5rem;
+    }
+    .submit-btn::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+    }
+    .submit-btn:hover { background: #ff6472; box-shadow: 0 0 20px var(--red-glow); transform: scale(1.01); }
+    .submit-btn:active { transform: scale(0.97); }
+
+    .bottom-link {
+      text-align: center;
+      margin-top: 1.25rem;
+      font-size: 12px;
+      color: var(--muted);
+      letter-spacing: 0.5px;
+    }
+    .bottom-link a { color: var(--red); text-decoration: none; font-weight: 500; transition: color 0.2s; }
+    .bottom-link a:hover { color: #ff6472; text-decoration: underline; }
+
+    .ver-tag {
+      text-align: center;
+      margin-top: 1.5rem;
+      font-size: 9px;
+      letter-spacing: 3px;
+      color: rgba(255,70,85,0.2);
+      text-transform: uppercase;
+    }
+
+    /* Ripple on button click */
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      width: 10px; height: 10px;
+      background: rgba(255,255,255,0.3);
+      animation: rippleAnim 0.5s linear;
+      pointer-events: none;
+      transform: translate(-50%,-50%) scale(0);
+    }
+    @keyframes rippleAnim { to { transform: translate(-50%,-50%) scale(20); opacity: 0; } }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div class="grid-bg"></div>
+  <div class="scan-line"></div>
+
+  <div class="wrapper">
+    <div class="brand">
+      <div class="brand-logo" id="logo">TASKRANT</div>
+      <div class="brand-sub">Tactical Task Management</div>
+    </div>
+
+    <div class="card">
+      <div class="card-corner tl"></div>
+      <div class="card-corner br"></div>
+      <div class="card-corner tr"></div>
+      <div class="card-corner bl"></div>
+      <div class="slash-accent"></div>
+
+      <div class="status-bar">
+        <div class="status-dot"></div>
+        <span class="status-text">Server Online // Ascendant Ranked</span>
+      </div>
+
+      {% if error %}
+      <div class="error-msg">⚠ {{ error }}</div>
+      {% endif %}
+
+      <form method="POST">
+        {% csrf_token %}
+
+        <div class="field">
+          <label for="username">Agent ID</label>
+          <div class="field-wrap">
+            <input type="text" id="username" name="username" placeholder="Enter your username" autocomplete="username" required>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="password">Access Code</label>
+          <div class="field-wrap">
+            <input type="password" id="password" name="password" placeholder="••••••••" autocomplete="current-password" required>
+          </div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="loginBtn">
+          Deploy Agent →
+        </button>
+      </form>
+
+      <div class="bottom-link">
+        New agent? <a href="{% url 'signup' %}">Create Account</a>
+      </div>
+    </div>
+
+    <div class="ver-tag">TASKRANT // BUILD 2026.1 // EPISODE 8 ACT 3</div>
+  </div>
+
+  <script>
+    // Particles
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+
+    const pts = Array.from({length: 60}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+      size: Math.random() * 1.5 + 0.5,
+      alpha: Math.random() * 0.5 + 0.1,
+      pulse: Math.random() * Math.PI * 2
+    }));
+
+    function drawParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      pts.forEach(p => {
+        p.x += p.vx; p.y += p.vy; p.pulse += 0.02;
+        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+        const a = p.alpha * (0.7 + 0.3 * Math.sin(p.pulse));
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(255,70,85,${a})`;
+        ctx.fill();
+      });
+      requestAnimationFrame(drawParticles);
+    }
+    drawParticles();
+
+    // Glitch effect on logo
+    const logo = document.getElementById('logo');
+    function triggerGlitch() {
+      logo.classList.add('glitch');
+      setTimeout(() => logo.classList.remove('glitch'), 200);
+      setTimeout(triggerGlitch, 3000 + Math.random() * 4000);
+    }
+    setTimeout(triggerGlitch, 1500);
+
+    // Button ripple
+    document.getElementById('loginBtn').addEventListener('click', function(e) {
+      const ripple = document.createElement('span');
+      ripple.className = 'ripple';
+      const rect = this.getBoundingClientRect();
+      ripple.style.left = (e.clientX - rect.left) + 'px';
+      ripple.style.top  = (e.clientY - rect.top) + 'px';
+      this.appendChild(ripple);
+      setTimeout(() => ripple.remove(), 600);
+    });
+
+    // Typewriter on status
+    const statusEl = document.querySelector('.status-text');
+    const msg = 'Server Online // Ascendant Ranked';
+    let i = 0;
+    statusEl.textContent = '';
+    function typeWriter() {
+      if (i < msg.length) { statusEl.textContent += msg[i++]; setTimeout(typeWriter, 40); }
+    }
+    setTimeout(typeWriter, 600);
+  </script>
+</body>
+</html>

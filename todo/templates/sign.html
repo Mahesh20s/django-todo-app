@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TASKRANT // New Agent</title>
+  <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --red: #ff4655;
+      --red-glow: rgba(255, 70, 85, 0.25);
+      --bg: #0f1923;
+      --surface: #1a2634;
+      --surface2: #111e2b;
+      --border: #2a3f55;
+      --text: #ece8e1;
+      --muted: #7b8fa1;
+      --green: #00ff9d;
+    }
+
+    body {
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+      position: relative;
+    }
+
+    canvas#particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
+    .grid-bg {
+      position: fixed; inset: 0;
+      background-image: linear-gradient(rgba(255,70,85,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(255,70,85,0.04) 1px, transparent 1px);
+      background-size: 40px 40px;
+      pointer-events: none; z-index: 0;
+    }
+    .scan-line {
+      position: fixed; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, rgba(255,70,85,0.4), transparent);
+      animation: scan 5s linear infinite;
+      pointer-events: none; z-index: 1;
+    }
+    @keyframes scan { 0%{top:0;opacity:0;} 5%{opacity:1;} 95%{opacity:1;} 100%{top:100vh;opacity:0;} }
+
+    .wrapper {
+      position: relative; z-index: 10;
+      width: 100%; max-width: 440px;
+      padding: 1rem;
+      animation: fadeSlideIn 0.6s cubic-bezier(0.16,1,0.3,1) both;
+    }
+    @keyframes fadeSlideIn {
+      from { opacity: 0; transform: translateY(30px) scale(0.97); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .brand { text-align: center; margin-bottom: 1.75rem; }
+    .brand-logo {
+      font-family: 'Rajdhani', sans-serif;
+      font-size: 38px; font-weight: 700;
+      color: var(--red); letter-spacing: 8px; text-transform: uppercase;
+    }
+    .brand-logo.glitch { animation: glitch 0.2s linear; }
+    @keyframes glitch {
+      0%   { text-shadow: none; transform: translate(0); }
+      20%  { text-shadow: -3px 0 #00ffff, 3px 0 #ff00ff; transform: translate(-2px,1px); }
+      40%  { text-shadow: 3px 0 #00ffff, -3px 0 #ff00ff; transform: translate(2px,-1px); }
+      60%  { text-shadow: -3px 0 #00ffff; transform: translate(-1px,0); }
+      80%  { text-shadow: 3px 0 #ff00ff; transform: translate(1px,0); }
+      100% { text-shadow: none; transform: translate(0); }
+    }
+    .brand-sub { font-size: 10px; letter-spacing: 5px; color: var(--muted); text-transform: uppercase; margin-top: 4px; }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--red);
+      position: relative;
+      padding: 2.5rem 2rem;
+      clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px));
+    }
+    .card::before {
+      content: ''; position: absolute; inset: 0;
+      background: linear-gradient(225deg, rgba(255,70,85,0.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+    .card-corner { position: absolute; width: 24px; height: 24px; }
+    .card-corner.tl { top: -1px; left: -1px; border-top: 2px solid var(--red); border-left: 2px solid var(--red); }
+    .card-corner.br { bottom: -1px; right: -1px; border-bottom: 2px solid var(--red); border-right: 2px solid var(--red); }
+
+    .slash-accent {
+      position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+      width: 3px; height: 80px;
+      background: linear-gradient(to bottom, transparent, var(--red), transparent);
+    }
+
+    .progress-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 1.75rem;
+    }
+    .progress-label { font-size: 10px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
+    .progress-track {
+      height: 2px; background: var(--border);
+      margin-top: 6px; position: relative; overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%; background: var(--red);
+      width: 0%; transition: width 0.4s ease;
+    }
+    .step-count { font-family: 'Rajdhani', sans-serif; font-size: 13px; color: var(--red); letter-spacing: 2px; }
+
+    .field { margin-bottom: 1.25rem; }
+    .field label {
+      display: block; font-size: 10px; letter-spacing: 2.5px;
+      color: var(--muted); text-transform: uppercase; margin-bottom: 6px;
+    }
+    .field input {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      color: var(--text);
+      font-size: 14px;
+      padding: 11px 14px;
+      outline: none;
+      font-family: 'Inter', sans-serif;
+      clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 0 100%);
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .field input::placeholder { color: #3a5068; }
+    .field input:focus { border-color: var(--red); box-shadow: 0 0 0 3px var(--red-glow); }
+    .field-hint { font-size: 10px; color: var(--muted); margin-top: 4px; letter-spacing: 0.5px; }
+    .field-valid { font-size: 10px; color: var(--green); margin-top: 4px; display: none; }
+    .field input.valid { border-color: var(--green); }
+    .field input.valid ~ .field-valid { display: block; }
+    .field input.valid ~ .field-hint { display: none; }
+
+    .strength-bar { height: 2px; background: var(--border); margin-top: 6px; position: relative; }
+    .strength-fill { height: 100%; width: 0%; transition: width 0.3s, background 0.3s; }
+
+    .submit-btn {
+      width: 100%;
+      background: var(--red);
+      color: #0f1923;
+      font-family: 'Rajdhani', sans-serif;
+      font-weight: 700;
+      font-size: 16px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+      border: none;
+      padding: 13px;
+      cursor: pointer;
+      clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px));
+      transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+      margin-top: 0.75rem;
+    }
+    .submit-btn::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, transparent 50%);
+    }
+    .submit-btn:hover { background: #ff6472; box-shadow: 0 0 20px var(--red-glow); transform: scale(1.01); }
+    .submit-btn:active { transform: scale(0.97); }
+
+    .bottom-link { text-align: center; margin-top: 1.25rem; font-size: 12px; color: var(--muted); letter-spacing: 0.5px; }
+    .bottom-link a { color: var(--red); text-decoration: none; font-weight: 500; }
+    .bottom-link a:hover { text-decoration: underline; }
+
+    .agent-perks {
+      display: flex; gap: 8px; margin-bottom: 1.5rem; flex-wrap: wrap;
+    }
+    .perk {
+      font-size: 9px; letter-spacing: 1.5px; color: var(--muted);
+      text-transform: uppercase;
+      border: 1px solid var(--border);
+      padding: 4px 8px;
+      clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 0 100%);
+    }
+
+    .ver-tag { text-align: center; margin-top: 1.5rem; font-size: 9px; letter-spacing: 3px; color: rgba(255,70,85,0.2); text-transform: uppercase; }
+
+    .ripple { position: absolute; border-radius: 50%; width: 10px; height: 10px; background: rgba(255,255,255,0.3); animation: rippleAnim 0.5s linear; pointer-events: none; transform: translate(-50%,-50%) scale(0); }
+    @keyframes rippleAnim { to { transform: translate(-50%,-50%) scale(20); opacity: 0; } }
+  </style>
+</head>
+<body>
+  <canvas id="particles"></canvas>
+  <div class="grid-bg"></div>
+  <div class="scan-line"></div>
+
+  <div class="wrapper">
+    <div class="brand">
+      <div class="brand-logo" id="logo">TASKRANT</div>
+      <div class="brand-sub">New Agent Briefing</div>
+    </div>
+
+    <div class="card">
+      <div class="card-corner tl"></div>
+      <div class="card-corner br"></div>
+      <div class="slash-accent"></div>
+
+      <div class="progress-header">
+        <div>
+          <div class="progress-label">Enlistment Progress</div>
+          <div class="progress-track"><div class="progress-fill" id="progressFill"></div></div>
+        </div>
+        <div class="step-count" id="stepCount">0 / 3</div>
+      </div>
+
+      <div class="agent-perks">
+        <span class="perk">// Free Tier</span>
+        <span class="perk">// Unlimited Tasks</span>
+        <span class="perk">// Secure</span>
+      </div>
+
+      <form method="POST" id="signupForm">
+        {% csrf_token %}
+
+        <div class="field">
+          <label for="username">Agent Codename</label>
+          <input type="text" id="username" name="username" placeholder="Choose a username" autocomplete="username" required>
+          <div class="field-hint">Letters, numbers, underscores only</div>
+          <div class="field-valid">✓ Codename available</div>
+        </div>
+
+        <div class="field">
+          <label for="email">Comms Channel</label>
+          <input type="email" id="email" name="email" placeholder="agent@kingdom.io" autocomplete="email">
+          <div class="field-hint">Optional — for account recovery</div>
+          <div class="field-valid">✓ Valid channel</div>
+        </div>
+
+        <div class="field">
+          <label for="password">Encryption Key</label>
+          <input type="password" id="password" name="password" placeholder="Min. 8 characters" autocomplete="new-password" required>
+          <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+          <div class="field-hint" id="strengthText">Strength: enter a password</div>
+        </div>
+
+        <button type="submit" class="submit-btn" id="signupBtn">Enlist Now →</button>
+      </form>
+
+      <div class="bottom-link">Already active? <a href="{% url 'login' %}">Return to base</a></div>
+    </div>
+
+    <div class="ver-tag">TASKRANT // EPISODE 8 ACT 3 // NEW AGENT</div>
+  </div>
+
+  <script>
+    // Particles
+    const canvas = document.getElementById('particles');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+    window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+    const pts = Array.from({length:55},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-.5)*.5,vy:(Math.random()-.5)*.5,size:Math.random()*1.5+.5,alpha:Math.random()*.5+.1,pulse:Math.random()*Math.PI*2}));
+    function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.pulse+=.02;if(p.x<0||p.x>canvas.width)p.vx*=-1;if(p.y<0||p.y>canvas.height)p.vy*=-1;const a=p.alpha*(.7+.3*Math.sin(p.pulse));ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(255,70,85,${a})`;ctx.fill();});requestAnimationFrame(draw);}
+    draw();
+
+    // Glitch
+    const logo=document.getElementById('logo');
+    function triggerGlitch(){logo.classList.add('glitch');setTimeout(()=>logo.classList.remove('glitch'),200);setTimeout(triggerGlitch,3000+Math.random()*4000);}
+    setTimeout(triggerGlitch,1200);
+
+    // Progress tracker
+    const fields = [document.getElementById('username'), document.getElementById('email'), document.getElementById('password')];
+    function updateProgress() {
+      let filled = fields.filter(f => f.value.trim().length > 0).length;
+      document.getElementById('progressFill').style.width = (filled / 3 * 100) + '%';
+      document.getElementById('stepCount').textContent = filled + ' / 3';
+    }
+    fields.forEach(f => f.addEventListener('input', updateProgress));
+
+    // Field validation
+    document.getElementById('username').addEventListener('input', function() {
+      const valid = /^[a-zA-Z0-9_]{3,}$/.test(this.value);
+      this.classList.toggle('valid', valid);
+      updateProgress();
+    });
+    document.getElementById('email').addEventListener('input', function() {
+      const valid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.value);
+      this.classList.toggle('valid', valid && this.value.length > 0);
+      updateProgress();
+    });
+
+    // Password strength
+    document.getElementById('password').addEventListener('input', function() {
+      const v = this.value;
+      let strength = 0;
+      if (v.length >= 8) strength++;
+      if (/[A-Z]/.test(v)) strength++;
+      if (/[0-9]/.test(v)) strength++;
+      if (/[^A-Za-z0-9]/.test(v)) strength++;
+      const fill = document.getElementById('strengthFill');
+      const txt = document.getElementById('strengthText');
+      const colors = ['#ff4655','#ff8c00','#ffd700','#00ff9d'];
+      const labels = ['Weak','Fair','Strong','Unbreakable'];
+      fill.style.width = (strength / 4 * 100) + '%';
+      fill.style.background = colors[strength - 1] || '#ff4655';
+      txt.textContent = v.length === 0 ? 'Strength: enter a password' : 'Strength: ' + (labels[strength-1] || 'Weak');
+      this.classList.toggle('valid', strength >= 3);
+      updateProgress();
+    });
+
+    // Ripple
+    document.getElementById('signupBtn').addEventListener('click', function(e) {
+      const r=document.createElement('span'); r.className='ripple';
+      const rect=this.getBoundingClientRect();
+      r.style.left=(e.clientX-rect.left)+'px'; r.style.top=(e.clientY-rect.top)+'px';
+      this.appendChild(r); setTimeout(()=>r.remove(),600);
+    });
+  </script>
+</body>
+</html>
