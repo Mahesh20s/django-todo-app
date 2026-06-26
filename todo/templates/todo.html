@@ -5,18 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>TASKRANT // Mission Board</title>
   <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;700&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
   <style>
     *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     :root {
-      --red: #ff4655; --red-glow: rgba(255,70,85,0.25);
+      --red: #ff4655; --red-glow: rgba(255,70,85,0.25); --red-dark: #cc2233;
       --bg: #0f1923; --surface: #1a2634; --surface2: #111e2b;
       --border: #2a3f55; --text: #ece8e1; --muted: #7b8fa1;
-      --green: #00ff9d; --yellow: #ffd700;
+      --green: #00ff9d; --green-glow: rgba(0,255,157,0.2);
+      --yellow: #ffd700; --purple: #a855f7;
     }
     html, body { height: 100%; }
     body { background: var(--bg); min-height: 100vh; font-family: 'Inter', sans-serif; color: var(--text); overflow-x: hidden; display: flex; flex-direction: column; }
 
-    /* BG */
+    /* ── BG ── */
     canvas#particles { position: fixed; inset: 0; pointer-events: none; z-index: 0; }
     .grid-bg { position: fixed; inset: 0; background-image: linear-gradient(rgba(255,70,85,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(255,70,85,0.03) 1px, transparent 1px); background-size: 40px 40px; pointer-events: none; z-index: 0; }
     .scan-line { position: fixed; left: 0; right: 0; height: 2px; background: linear-gradient(90deg, transparent, rgba(255,70,85,0.35), transparent); animation: scan 7s linear infinite; pointer-events: none; z-index: 1; }
@@ -24,17 +26,18 @@
     .bg-glow-left { position: fixed; left: -200px; top: 30%; width: 500px; height: 500px; background: radial-gradient(circle, rgba(255,70,85,0.06) 0%, transparent 70%); pointer-events: none; z-index: 0; }
     .bg-glow-right { position: fixed; right: -200px; bottom: 10%; width: 600px; height: 600px; background: radial-gradient(circle, rgba(0,255,157,0.03) 0%, transparent 70%); pointer-events: none; z-index: 0; }
 
-    /* NAVBAR */
-    .navbar { position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 2rem; background: rgba(15,25,35,0.92); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,70,85,0.2); animation: slideDown 0.5s cubic-bezier(0.16,1,0.3,1) both; flex-shrink: 0; }
+    /* ── NAVBAR ── */
+    .navbar { position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between; padding: 0.85rem 2rem; background: rgba(15,25,35,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,70,85,0.2); animation: slideDown 0.5s cubic-bezier(0.16,1,0.3,1) both; flex-shrink: 0; }
     @keyframes slideDown { from{opacity:0;transform:translateY(-20px);} to{opacity:1;transform:translateY(0);} }
     .nav-left { display: flex; align-items: center; gap: 16px; }
-    .nav-logo { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: var(--red); letter-spacing: 5px; text-transform: uppercase; }
+    .nav-logo { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: var(--red); letter-spacing: 5px; text-transform: uppercase; cursor: default; }
     .nav-logo.glitch { animation: glitch 0.2s linear; }
     @keyframes glitch { 0%{text-shadow:none;transform:translate(0);} 25%{text-shadow:-3px 0 #00ffff,3px 0 #ff00ff;transform:translate(-2px,1px);} 50%{text-shadow:3px 0 #00ffff,-3px 0 #ff00ff;transform:translate(2px,-1px);} 75%{text-shadow:-3px 0 #00ffff;transform:translate(-1px,0);} 100%{text-shadow:none;transform:translate(0);} }
     .nav-divider { width: 1px; height: 20px; background: var(--border); }
     .nav-agent { font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; }
     .nav-agent span { color: var(--red); }
-    .nav-right { display: flex; align-items: center; gap: 16px; }
+    .nav-streak { display: flex; align-items: center; gap: 6px; background: rgba(255,215,0,0.08); border: 1px solid rgba(255,215,0,0.2); padding: 4px 10px; font-size: 11px; color: var(--yellow); letter-spacing: 1px; font-family: 'Rajdhani', sans-serif; font-weight: 700; }
+    .nav-right { display: flex; align-items: center; gap: 14px; }
     .nav-clock { font-family: 'Rajdhani', sans-serif; font-size: 16px; color: var(--text); letter-spacing: 3px; }
     .nav-status { display: flex; align-items: center; gap: 6px; }
     .status-dot { width: 6px; height: 6px; background: var(--green); border-radius: 50%; animation: blink 2s infinite; }
@@ -43,57 +46,65 @@
     .logout-btn { background: transparent; border: 1px solid rgba(255,70,85,0.3); color: var(--muted); font-family: 'Rajdhani', sans-serif; font-size: 11px; letter-spacing: 2px; text-transform: uppercase; padding: 6px 14px; cursor: pointer; clip-path: polygon(0 0, calc(100% - 6px) 0, 100% 6px, 100% 100%, 6px 100%, 0 calc(100% - 6px)); transition: all 0.2s; text-decoration: none; display: inline-block; }
     .logout-btn:hover { border-color: var(--red); color: var(--red); background: rgba(255,70,85,0.08); }
 
-    /* STATS BAR */
-    .stats-bar { position: relative; z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: rgba(255,70,85,0.1); border-bottom: 1px solid rgba(255,70,85,0.15); flex-shrink: 0; animation: fadeIn 0.5s 0.2s both; }
-    @keyframes fadeIn { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
+    /* ── STATS BAR ── */
+    .stats-bar { position: relative; z-index: 5; display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; background: rgba(255,70,85,0.1); border-bottom: 1px solid rgba(255,70,85,0.15); flex-shrink: 0; animation: fadeUp 0.5s 0.2s both; }
+    @keyframes fadeUp { from{opacity:0;transform:translateY(10px);} to{opacity:1;transform:translateY(0);} }
     .stat-item { background: var(--bg); padding: 12px 20px; display: flex; align-items: center; gap: 14px; }
-    .stat-icon { font-family: 'Rajdhani', sans-serif; font-size: 20px; color: var(--red); width: 32px; text-align: center; opacity: 0.7; }
-    .stat-icon.green { color: var(--green); }
-    .stat-icon.yellow { color: var(--yellow); }
+    .stat-icon-box { width: 36px; height: 36px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 4px; }
+    .stat-icon-box.red   { background: rgba(255,70,85,0.12);  border: 1px solid rgba(255,70,85,0.25);  }
+    .stat-icon-box.green { background: rgba(0,255,157,0.1);   border: 1px solid rgba(0,255,157,0.2);   }
+    .stat-icon-box.yellow{ background: rgba(255,215,0,0.1);   border: 1px solid rgba(255,215,0,0.2);   }
+    .stat-icon-box.blue  { background: rgba(99,179,237,0.1);  border: 1px solid rgba(99,179,237,0.2);  }
+    .stat-icon-box i { font-size: 15px; }
+    .stat-icon-box.red   i { color: var(--red);    }
+    .stat-icon-box.green i { color: var(--green);  }
+    .stat-icon-box.yellow i{ color: var(--yellow); }
+    .stat-icon-box.blue  i { color: #63b3ed;       }
     .stat-label { font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
     .stat-value { font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: var(--text); line-height: 1; }
-    .stat-value.red { color: var(--red); }
-    .stat-value.green { color: var(--green); }
+    .stat-value.red    { color: var(--red);    }
+    .stat-value.green  { color: var(--green);  }
+    .stat-value.yellow { color: var(--yellow); }
 
-    /* MAIN LAYOUT */
+    /* ── LAYOUT ── */
     .layout { position: relative; z-index: 5; display: grid; grid-template-columns: 280px 1fr; gap: 0; flex: 1; min-height: 0; }
 
-    /* SIDEBAR */
-    .sidebar { background: rgba(15,25,35,0.7); border-right: 1px solid rgba(255,70,85,0.12); padding: 1.5rem; display: flex; flex-direction: column; gap: 1.25rem; overflow-y: auto; animation: slideRight 0.5s 0.3s cubic-bezier(0.16,1,0.3,1) both; }
+    /* ── SIDEBAR ── */
+    .sidebar { background: rgba(15,25,35,0.75); border-right: 1px solid rgba(255,70,85,0.12); padding: 1.25rem; display: flex; flex-direction: column; gap: 1rem; overflow-y: auto; animation: slideRight 0.5s 0.3s cubic-bezier(0.16,1,0.3,1) both; }
     @keyframes slideRight { from{opacity:0;transform:translateX(-20px);} to{opacity:1;transform:translateX(0);} }
-
-    .sidebar-section { }
-    .sidebar-title { font-size: 9px; letter-spacing: 3px; color: rgba(255,70,85,0.5); text-transform: uppercase; margin-bottom: 10px; padding-bottom: 6px; border-bottom: 1px solid rgba(255,70,85,0.1); }
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-thumb { background: rgba(255,70,85,0.2); }
+    .sidebar-title { font-size: 9px; letter-spacing: 3px; color: rgba(255,70,85,0.5); text-transform: uppercase; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,70,85,0.1); }
 
     /* Agent Card */
-    .agent-card { background: var(--surface); border: 1px solid var(--border); padding: 16px; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px)); position: relative; overflow: hidden; }
+    .agent-card { background: var(--surface); border: 1px solid var(--border); padding: 14px; clip-path: polygon(0 0, calc(100% - 12px) 0, 100% 12px, 100% 100%, 12px 100%, 0 calc(100% - 12px)); position: relative; overflow: hidden; }
     .agent-card::before { content: ''; position: absolute; inset: 0; background: linear-gradient(135deg, rgba(255,70,85,0.05) 0%, transparent 60%); pointer-events: none; }
-    .agent-avatar { width: 48px; height: 48px; background: rgba(255,70,85,0.1); border: 1px solid rgba(255,70,85,0.3); display: flex; align-items: center; justify-content: center; font-family: 'Rajdhani', sans-serif; font-size: 22px; font-weight: 700; color: var(--red); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); margin-bottom: 10px; }
-    .agent-name { font-family: 'Rajdhani', sans-serif; font-size: 16px; font-weight: 700; color: var(--text); letter-spacing: 2px; text-transform: uppercase; }
+    .agent-avatar { width: 44px; height: 44px; background: rgba(255,70,85,0.1); border: 1px solid rgba(255,70,85,0.3); display: flex; align-items: center; justify-content: center; font-family: 'Rajdhani', sans-serif; font-size: 20px; font-weight: 700; color: var(--red); clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); margin-bottom: 8px; }
+    .agent-name { font-family: 'Rajdhani', sans-serif; font-size: 15px; font-weight: 700; color: var(--text); letter-spacing: 2px; text-transform: uppercase; }
     .agent-rank { font-size: 10px; letter-spacing: 2px; color: var(--red); text-transform: uppercase; margin-top: 2px; }
-    .agent-divider { height: 1px; background: var(--border); margin: 10px 0; }
-    .agent-stat-row { display: flex; justify-content: space-between; margin-top: 6px; }
+    .agent-divider { height: 1px; background: var(--border); margin: 8px 0; }
+    .agent-stat-row { display: flex; justify-content: space-between; }
     .agent-stat { text-align: center; }
-    .agent-stat-val { font-family: 'Rajdhani', sans-serif; font-size: 18px; color: var(--red); font-weight: 700; }
-    .agent-stat-lbl { font-size: 9px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
+    .agent-stat-val { font-family: 'Rajdhani', sans-serif; font-size: 17px; color: var(--red); font-weight: 700; }
+    .agent-stat-lbl { font-size: 8px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
 
     /* Progress */
-    .prog-card { background: var(--surface); border: 1px solid var(--border); padding: 14px; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
-    .prog-header { display: flex; justify-content: space-between; margin-bottom: 8px; }
+    .prog-card { background: var(--surface); border: 1px solid var(--border); padding: 12px; clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 10px 100%, 0 calc(100% - 10px)); }
+    .prog-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
     .prog-label { font-size: 10px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
     .prog-pct { font-family: 'Rajdhani', sans-serif; font-size: 13px; color: var(--red); }
     .prog-track { height: 4px; background: var(--border); position: relative; margin-bottom: 10px; }
     .prog-fill { height: 100%; background: linear-gradient(90deg, var(--red), #ff8c8c); transition: width 0.8s cubic-bezier(0.4,0,0.2,1); position: relative; }
-    .prog-fill::after { content:''; position:absolute; right:-4px; top:-3px; width:10px; height:10px; background:var(--red); transform:rotate(45deg); box-shadow: 0 0 6px var(--red-glow); }
+    .prog-fill::after { content:''; position:absolute; right:-4px; top:-3px; width:10px; height:10px; background:var(--red); transform:rotate(45deg); }
     .mini-stats { display: flex; gap: 6px; }
-    .mini-stat { flex: 1; background: var(--surface2); border: 1px solid var(--border); padding: 6px 8px; text-align: center; clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 0 100%); }
-    .mini-stat-val { font-family: 'Rajdhani', sans-serif; font-size: 15px; color: var(--text); }
+    .mini-stat { flex: 1; background: var(--surface2); border: 1px solid var(--border); padding: 5px 6px; text-align: center; clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 0 100%); }
+    .mini-stat-val { font-family: 'Rajdhani', sans-serif; font-size: 14px; color: var(--text); }
     .mini-stat-val.green { color: var(--green); }
     .mini-stat-lbl { font-size: 8px; letter-spacing: 1px; color: var(--muted); text-transform: uppercase; }
 
     /* Quote */
-    .quote-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--red); padding: 12px 14px; }
-    .quote-text { font-size: 12px; color: var(--text); line-height: 1.6; font-style: italic; margin-bottom: 6px; }
+    .quote-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--red); padding: 10px 12px; }
+    .quote-text { font-size: 11px; color: var(--text); line-height: 1.6; font-style: italic; margin-bottom: 5px; }
     .quote-author { font-size: 9px; letter-spacing: 2px; color: var(--red); text-transform: uppercase; }
 
     /* Tips */
@@ -101,8 +112,25 @@
     .tip-text { font-size: 11px; color: var(--muted); line-height: 1.5; }
     .tip-text span { color: var(--red); }
 
-    /* MAIN CONTENT */
-    .main-content { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; animation: fadeIn 0.5s 0.4s both; }
+    /* ── RECENT ACTIVITY ── */
+    .activity-list { display: flex; flex-direction: column; gap: 6px; }
+    .act-item { display: flex; align-items: flex-start; gap: 8px; padding: 7px 10px; background: var(--surface2); border: 1px solid var(--border); border-left: 2px solid; }
+    .act-item.type-complete { border-left-color: var(--green); }
+    .act-item.type-add      { border-left-color: var(--red); }
+    .act-item.type-delete   { border-left-color: var(--muted); }
+    .act-icon { font-size: 11px; margin-top: 1px; flex-shrink: 0; }
+    .act-item.type-complete .act-icon { color: var(--green); }
+    .act-item.type-add      .act-icon { color: var(--red); }
+    .act-item.type-delete   .act-icon { color: var(--muted); }
+    .act-body { flex: 1; min-width: 0; }
+    .act-text { font-size: 11px; color: var(--text); line-height: 1.3; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .act-time { font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+    .act-empty { font-size: 10px; color: rgba(255,255,255,0.2); letter-spacing: 1px; text-align: center; padding: 10px 0; font-family: 'Rajdhani', sans-serif; }
+
+    /* ── MAIN CONTENT ── */
+    .main-content { padding: 1.5rem; overflow-y: auto; display: flex; flex-direction: column; gap: 1.25rem; animation: fadeUp 0.5s 0.4s both; }
+    .main-content::-webkit-scrollbar { width: 3px; }
+    .main-content::-webkit-scrollbar-thumb { background: rgba(255,70,85,0.2); }
 
     /* Add Form */
     .add-form { display: flex; gap: 8px; }
@@ -115,53 +143,104 @@
 
     /* Section header */
     .section-header { display: flex; align-items: center; justify-content: space-between; }
-    .section-title { font-family: 'Rajdhani', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
+    .section-title { font-family: 'Rajdhani', sans-serif; font-size: 11px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; display: flex; align-items: center; gap: 10px; }
+    .active-badge { background: var(--red); color: #fff; font-size: 10px; font-weight: 700; padding: 1px 8px; border-radius: 10px; letter-spacing: 0.5px; font-family: 'Rajdhani', sans-serif; }
     .filter-btns { display: flex; gap: 6px; }
     .filter-btn { font-size: 9px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; background: transparent; border: 1px solid var(--border); padding: 4px 12px; cursor: pointer; font-family: 'Rajdhani', sans-serif; clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px)); transition: all 0.2s; }
     .filter-btn.active, .filter-btn:hover { border-color: var(--red); color: var(--red); background: rgba(255,70,85,0.08); }
 
-    /* Task list */
+    /* ── TASK LIST ── */
     .task-list { display: flex; flex-direction: column; gap: 8px; }
-    .task-item { background: var(--surface); border: 1px solid var(--border); padding: 14px 16px; display: flex; align-items: center; gap: 12px; clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px)); transition: border-color 0.2s, transform 0.2s, box-shadow 0.2s; animation: taskIn 0.35s cubic-bezier(0.16,1,0.3,1) both; position: relative; overflow: hidden; }
-    @keyframes taskIn { from{opacity:0;transform:translateX(-16px);} to{opacity:1;transform:translateX(0);} }
-    .task-item::before { content:''; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--red); transform:scaleY(0); transition:transform 0.2s; transform-origin:bottom; }
-    .task-item:hover { border-color: rgba(255,70,85,0.4); transform: translateX(4px); box-shadow: -4px 0 0 var(--red); }
-    .task-item:hover::before { transform: scaleY(1); }
-    .task-item.completed { opacity: 0.4; }
-    .task-item.completed .task-title { text-decoration: line-through; color: var(--muted); }
-    .task-item.completed { border-color: rgba(0,255,157,0.2); }
-    .task-item.completed:hover { box-shadow: -4px 0 0 var(--green); border-color: rgba(0,255,157,0.4); }
 
-    .task-num { font-family: 'Rajdhani', sans-serif; font-size: 11px; color: rgba(255,70,85,0.5); letter-spacing: 2px; min-width: 28px; }
-    .task-checkbox { width: 18px; height: 18px; border: 1.5px solid var(--red); transform: rotate(45deg); cursor: pointer; flex-shrink: 0; background: transparent; transition: background 0.2s, box-shadow 0.2s; appearance: none; -webkit-appearance: none; }
-    .task-checkbox:hover { box-shadow: 0 0 8px var(--red-glow); }
-    .task-item.completed .task-checkbox { background: var(--green); border-color: var(--green); box-shadow: 0 0 10px rgba(0,255,157,0.3); }
+    .task-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 14px 100%, 0 calc(100% - 14px));
+      transition: border-color 0.2s, transform 0.15s;
+      animation: taskIn 0.35s cubic-bezier(0.16,1,0.3,1) both;
+      position: relative;
+      overflow: hidden;
+    }
+    @keyframes taskIn { from{opacity:0;transform:translateX(-16px);} to{opacity:1;transform:translateX(0);} }
+
+    /* ── COLORED LEFT BORDER (the fix you wanted) ── */
+    .task-left-bar {
+      width: 4px;
+      align-self: stretch;
+      flex-shrink: 0;
+      transition: background 0.3s;
+    }
+    .task-item:not(.completed) .task-left-bar { background: var(--red); }
+    .task-item.completed       .task-left-bar { background: var(--green); }
+
+    .task-inner { display: flex; align-items: center; gap: 12px; flex: 1; padding: 12px 14px 12px 0; }
+
+    .task-item:hover { border-color: rgba(255,70,85,0.4); transform: translateX(3px); }
+    .task-item.completed { opacity: 0.55; }
+    .task-item.completed:hover { border-color: rgba(0,255,157,0.35); transform: translateX(3px); }
+    .task-item.completed .task-title { text-decoration: line-through; color: var(--muted); }
+
+    /* Diamond checkbox */
+    .task-checkbox-wrap { display: flex; align-items: center; justify-content: center; width: 22px; height: 22px; flex-shrink: 0; }
+    .task-checkbox {
+      width: 16px; height: 16px;
+      border: 1.5px solid rgba(255,70,85,0.6);
+      transform: rotate(45deg);
+      background: transparent;
+      transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+      flex-shrink: 0;
+      display: block;
+    }
+    .task-item.completed .task-checkbox {
+      background: var(--green);
+      border-color: var(--green);
+      box-shadow: 0 0 8px var(--green-glow);
+    }
+    .task-checkbox-link { display: flex; align-items: center; justify-content: center; text-decoration: none; }
+    .task-checkbox-link:hover .task-checkbox { box-shadow: 0 0 10px var(--red-glow); border-color: var(--red); }
+
+    .task-num { font-family: 'Rajdhani', sans-serif; font-size: 11px; color: rgba(255,70,85,0.4); letter-spacing: 2px; min-width: 26px; }
     .task-title { flex: 1; font-size: 14px; color: var(--text); letter-spacing: 0.3px; }
-    .task-date { font-size: 10px; color: var(--muted); letter-spacing: 1px; white-space: nowrap; margin-right: 4px; }
-    .task-priority { font-size: 8px; letter-spacing: 1px; padding: 2px 7px; border: 1px solid; text-transform: uppercase; margin-right: 4px; }
-    .task-priority.high { color: var(--red); border-color: rgba(255,70,85,0.3); }
-    .task-priority.med { color: var(--yellow); border-color: rgba(255,215,0,0.3); }
-    .task-actions { display: flex; gap: 6px; }
-    .action-btn { font-family: 'Rajdhani', sans-serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 5px 12px; cursor: pointer; clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px)); transition: all 0.2s; text-decoration: none; display: inline-block; }
+    .task-date { font-size: 10px; color: var(--muted); letter-spacing: 1px; white-space: nowrap; }
+
+    /* Inline edit */
+    .task-edit-input { flex: 1; background: var(--surface2); border: 1px solid var(--red); color: var(--text); font-size: 14px; padding: 2px 8px; font-family: 'Inter', sans-serif; outline: none; display: none; }
+
+    .task-actions { display: flex; gap: 5px; align-items: center; flex-shrink: 0; }
+    .action-btn { font-family: 'Rajdhani', sans-serif; font-size: 10px; letter-spacing: 1.5px; text-transform: uppercase; background: transparent; border: 1px solid var(--border); color: var(--muted); padding: 4px 10px; cursor: pointer; clip-path: polygon(0 0, calc(100% - 4px) 0, 100% 4px, 100% 100%, 4px 100%, 0 calc(100% - 4px)); transition: all 0.2s; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; }
     .action-btn:hover { border-color: var(--red); color: var(--red); background: rgba(255,70,85,0.08); }
     .action-btn.kill:hover { background: rgba(255,70,85,0.15); box-shadow: 0 0 10px var(--red-glow); }
-    .action-btn.complete { background: transparent; border: none; padding: 0; clip-path: none; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; }
+    .action-btn.save-btn { border-color: var(--green); color: var(--green); display: none; }
+    .action-btn.save-btn:hover { background: rgba(0,255,157,0.1); }
 
     /* Empty state */
-    .empty-state { text-align: center; padding: 4rem 1rem; }
-    .empty-icon { font-family: 'Rajdhani', sans-serif; font-size: 13px; letter-spacing: 5px; color: rgba(255,70,85,0.2); text-transform: uppercase; margin-bottom: 12px; }
-    .empty-text { font-size: 11px; letter-spacing: 3px; color: var(--muted); text-transform: uppercase; }
+    .empty-state { text-align: center; padding: 3.5rem 1rem; }
+    .empty-crosshair { position: relative; width: 64px; height: 64px; margin: 0 auto 16px; }
+    .empty-crosshair::before, .empty-crosshair::after { content: ''; position: absolute; background: rgba(255,70,85,0.2); }
+    .empty-crosshair::before { width: 2px; height: 100%; left: 50%; transform: translateX(-50%); }
+    .empty-crosshair::after  { height: 2px; width: 100%; top: 50%; transform: translateY(-50%); }
+    .empty-crosshair-ring { position: absolute; inset: 8px; border: 1px solid rgba(255,70,85,0.2); border-radius: 50%; animation: pulse-ring 2s ease infinite; }
+    .empty-crosshair-ring2 { position: absolute; inset: 20px; border: 1px solid rgba(255,70,85,0.15); border-radius: 50%; }
+    .empty-crosshair-dot { position: absolute; width: 6px; height: 6px; background: rgba(255,70,85,0.4); border-radius: 50%; top: 50%; left: 50%; transform: translate(-50%,-50%); animation: pulse-dot 2s ease infinite; }
+    @keyframes pulse-ring { 0%,100%{transform:scale(1);opacity:0.3;} 50%{transform:scale(1.1);opacity:0.7;} }
+    @keyframes pulse-dot  { 0%,100%{opacity:0.4;} 50%{opacity:1;} }
+    .empty-title { font-family: 'Rajdhani', sans-serif; font-size: 12px; letter-spacing: 4px; color: rgba(255,70,85,0.3); text-transform: uppercase; margin-bottom: 6px; }
+    .empty-sub { font-size: 11px; letter-spacing: 2px; color: rgba(255,255,255,0.2); text-transform: uppercase; }
 
-    /* TOAST */
+    /* ── TOAST ── */
     .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--surface); border: 1px solid var(--red); color: var(--text); font-size: 12px; letter-spacing: 1px; padding: 10px 18px; clip-path: polygon(0 0, calc(100% - 8px) 0, 100% 8px, 100% 100%, 8px 100%, 0 calc(100% - 8px)); z-index: 100; opacity: 0; transform: translateY(10px); transition: opacity 0.3s, transform 0.3s; pointer-events: none; }
     .toast.show { opacity: 1; transform: translateY(0); }
-    .toast.success { border-color: var(--green); }
+    .toast.success { border-color: var(--green); color: var(--green); }
+    .toast.warn    { border-color: var(--yellow); color: var(--yellow); }
 
     /* Ripple */
-    .ripple { position: absolute; border-radius: 50%; width: 10px; height: 10px; background: rgba(255,255,255,0.3); animation: rippleAnim 0.5s linear; pointer-events: none; transform: translate(-50%,-50%) scale(0); }
+    .ripple { position: absolute; border-radius: 50%; width: 10px; height: 10px; background: rgba(255,255,255,0.25); animation: rippleAnim 0.5s linear; pointer-events: none; transform: translate(-50%,-50%) scale(0); }
     @keyframes rippleAnim { to { transform: translate(-50%,-50%) scale(20); opacity: 0; } }
 
-    /* Responsive */
+    /* ── RESPONSIVE ── */
     @media (max-width: 900px) {
       .layout { grid-template-columns: 1fr; }
       .sidebar { display: none; }
@@ -171,6 +250,7 @@
       .stats-bar { grid-template-columns: 1fr 1fr; }
       .navbar { padding: 0.75rem 1rem; }
       .main-content { padding: 1rem; }
+      .nav-streak { display: none; }
     }
   </style>
 </head>
@@ -187,6 +267,10 @@
       <div class="nav-logo" id="logo">TASKRANT</div>
       <div class="nav-divider"></div>
       <div class="nav-agent">Agent: <span>{{ request.user.username }}</span></div>
+      <div class="nav-streak">
+        <i class="fa-solid fa-fire" style="color:#ffd700;font-size:13px"></i>
+        <span id="streakVal">0</span> Day Streak
+      </div>
     </div>
     <div class="nav-right">
       <div class="nav-clock" id="clock">00:00:00</div>
@@ -201,31 +285,39 @@
   <!-- STATS BAR -->
   <div class="stats-bar">
     <div class="stat-item">
-      <div class="stat-icon">◈</div>
+      <div class="stat-icon-box red">
+        <i class="fa-solid fa-crosshairs"></i>
+      </div>
       <div>
         <div class="stat-label">Total Missions</div>
         <div class="stat-value">{{ total }}</div>
       </div>
     </div>
     <div class="stat-item">
-      <div class="stat-icon red">▶</div>
+      <div class="stat-icon-box red">
+        <i class="fa-solid fa-bolt"></i>
+      </div>
       <div>
         <div class="stat-label">Active</div>
         <div class="stat-value red">{{ active }}</div>
       </div>
     </div>
     <div class="stat-item">
-      <div class="stat-icon green">✓</div>
+      <div class="stat-icon-box green">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
       <div>
         <div class="stat-label">Completed</div>
         <div class="stat-value green">{{ completed }}</div>
       </div>
     </div>
     <div class="stat-item">
-      <div class="stat-icon yellow">◆</div>
+      <div class="stat-icon-box yellow">
+        <i class="fa-solid fa-chart-simple"></i>
+      </div>
       <div>
         <div class="stat-label">Completion Rate</div>
-        <div class="stat-value">{{ percent }}%</div>
+        <div class="stat-value yellow">{{ percent }}%</div>
       </div>
     </div>
   </div>
@@ -237,17 +329,17 @@
     <aside class="sidebar">
 
       <!-- Agent Card -->
-      <div class="sidebar-section">
+      <div>
         <div class="sidebar-title">// Agent Profile</div>
         <div class="agent-card">
-          <div class="agent-avatar" id="avatarInitial">{{ request.user.username|slice:":1"|upper }}</div>
+          <div class="agent-avatar">{{ request.user.username|slice:":1"|upper }}</div>
           <div class="agent-name">{{ request.user.username }}</div>
           <div class="agent-rank">
-            {% if percent >= 80 %}Radiant Operator
-            {% elif percent >= 60 %}Diamond Agent
-            {% elif percent >= 40 %}Platinum Recruit
-            {% elif percent >= 20 %}Silver Trainee
-            {% else %}Iron Cadet{% endif %}
+            {% if percent >= 80 %}⚡ Radiant Operator
+            {% elif percent >= 60 %}💎 Diamond Agent
+            {% elif percent >= 40 %}🔷 Platinum Recruit
+            {% elif percent >= 20 %}🥈 Silver Trainee
+            {% else %}🛡 Iron Cadet{% endif %}
           </div>
           <div class="agent-divider"></div>
           <div class="agent-stat-row">
@@ -268,7 +360,7 @@
       </div>
 
       <!-- Mission Progress -->
-      <div class="sidebar-section">
+      <div>
         <div class="sidebar-title">// Mission Progress</div>
         <div class="prog-card">
           <div class="prog-header">
@@ -280,7 +372,7 @@
           </div>
           <div class="mini-stats">
             <div class="mini-stat">
-              <div class="mini-stat-val">{{ active }}</div>
+              <div class="mini-stat-val" style="color:var(--red)">{{ active }}</div>
               <div class="mini-stat-lbl">Active</div>
             </div>
             <div class="mini-stat">
@@ -295,20 +387,28 @@
         </div>
       </div>
 
-      <!-- Quote -->
-      <div class="sidebar-section">
+      <!-- Intel / Quote -->
+      <div>
         <div class="sidebar-title">// Intel</div>
-        <div class="quote-card" id="quoteCard">
+        <div class="quote-card">
           <div class="quote-text" id="quoteText">Loading briefing...</div>
           <div class="quote-author" id="quoteAuthor">— TASKRANT HQ</div>
         </div>
       </div>
 
-      <!-- Tips -->
-      <div class="sidebar-section">
+      <!-- Field Tips -->
+      <div>
         <div class="sidebar-title">// Field Tips</div>
         <div class="tip-card">
-          <div class="tip-text"><span>PRO TIP:</span> Click the diamond checkbox to mark a mission complete. Use <span>Kill</span> to permanently eliminate a task.</div>
+          <div class="tip-text"><span>PRO TIP:</span> Click the diamond checkbox to mark a mission complete. Use <span>Kill</span> to permanently eliminate a task. Use <span>Edit</span> to rename a mission inline.</div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div>
+        <div class="sidebar-title">// Recent Activity</div>
+        <div class="activity-list" id="activityList">
+          <div class="act-empty">No activity yet this session</div>
         </div>
       </div>
 
@@ -320,13 +420,18 @@
       <!-- Add Form -->
       <form method="POST" class="add-form" id="addForm">
         {% csrf_token %}
-        <input type="text" name="title" class="add-input" id="addInput" placeholder="Enter new mission objective..." autocomplete="off">
-        <button type="submit" class="add-btn" id="addBtn">+ Deploy</button>
+        <input type="text" name="title" class="add-input" id="addInput" placeholder="Enter new mission objective..." autocomplete="off" maxlength="200">
+        <button type="submit" class="add-btn" id="addBtn">
+          <i class="fa-solid fa-rocket" style="margin-right:6px;font-size:12px"></i>Deploy
+        </button>
       </form>
 
       <!-- Section Header -->
       <div class="section-header">
-        <div class="section-title">// Active Missions</div>
+        <div class="section-title">
+          // Active Missions
+          <span class="active-badge">{{ active }} Active</span>
+        </div>
         <div class="filter-btns">
           <button class="filter-btn active" onclick="filterTasks('all',this)">All</button>
           <button class="filter-btn" onclick="filterTasks('active',this)">Active</button>
@@ -337,23 +442,61 @@
       <!-- Task List -->
       <div class="task-list" id="taskList">
         {% for todo in res %}
-        <div class="task-item {% if todo.is_completed %}completed{% endif %}" style="animation-delay:{{ forloop.counter0 }}00ms">
-          <div class="task-num">{{ forloop.counter|stringformat:"02d" }}</div>
-          <a href="{% url 'toggle_todo' todo.id %}" class="action-btn complete" title="Toggle complete">
-            <div class="task-checkbox {% if todo.is_completed %}checked{% endif %}"></div>
-          </a>
-          <span class="task-title">{{ todo.title }}</span>
-          <span class="task-date">{{ todo.date|date:"M d" }}</span>
-          <div class="task-actions">
-            <a href="#" class="action-btn">Edit</a>
-            <a href="{% url 'delete_todo' todo.id %}" class="action-btn kill"
-               onclick="return confirm('Eliminate this mission?')">Kill</a>
+        <div class="task-item {% if todo.is_completed %}completed{% endif %}"
+             style="animation-delay:{{ forloop.counter0 }}00ms"
+             data-id="{{ todo.id }}"
+             data-done="{% if todo.is_completed %}1{% else %}0{% endif %}">
+
+          <!-- Colored left border bar -->
+          <div class="task-left-bar"></div>
+
+          <div class="task-inner">
+            <div class="task-num">{{ forloop.counter|stringformat:"02d" }}</div>
+
+            <!-- Diamond checkbox toggle -->
+            <a href="{% url 'toggle_todo' todo.id %}" class="task-checkbox-link"
+               title="{% if todo.is_completed %}Mark active{% else %}Mark complete{% endif %}"
+               onclick="logActivity('{% if todo.is_completed %}active{% else %}complete{% endif %}', '{{ todo.title|escapejs }}')">
+              <div class="task-checkbox"></div>
+            </a>
+
+            <!-- Title (or edit input) -->
+            <span class="task-title" id="title-{{ todo.id }}">{{ todo.title }}</span>
+            <input class="task-edit-input" id="edit-{{ todo.id }}"
+                   type="text" value="{{ todo.title }}" maxlength="200">
+
+            <span class="task-date">{{ todo.date|date:"M d" }}</span>
+
+            <div class="task-actions">
+              <!-- Edit button -->
+              <button class="action-btn" id="editBtn-{{ todo.id }}"
+                      onclick="startEdit({{ todo.id }})" type="button">
+                <i class="fa-solid fa-pen" style="font-size:10px"></i> Edit
+              </button>
+              <!-- Save button (hidden until editing) -->
+              <button class="action-btn save-btn" id="saveBtn-{{ todo.id }}"
+                      onclick="saveEdit({{ todo.id }})" type="button">
+                <i class="fa-solid fa-check" style="font-size:10px"></i> Save
+              </button>
+              <!-- Kill button -->
+              <a href="{% url 'delete_todo' todo.id %}" class="action-btn kill"
+                 onclick="return confirmKill(event, this, '{{ todo.title|escapejs }}')"
+                 title="Delete task">
+                <i class="fa-solid fa-xmark" style="font-size:10px"></i> Kill
+              </a>
+            </div>
           </div>
         </div>
         {% empty %}
+        <!-- Empty state with animated crosshair -->
         <div class="empty-state">
-          <div class="empty-icon">[ NO MISSIONS FOUND ]</div>
-          <div class="empty-text">Deploy your first mission above</div>
+          <div class="empty-crosshair">
+            <div class="empty-crosshair-ring"></div>
+            <div class="empty-crosshair-ring2"></div>
+            <div class="empty-crosshair-dot"></div>
+          </div>
+          <div class="empty-title">[ No Missions Found ]</div>
+          <div class="empty-sub">Deploy your first mission above</div>
         </div>
         {% endfor %}
       </div>
@@ -361,34 +504,53 @@
     </main>
   </div>
 
-  <div class="toast" id="toast">Mission deployed!</div>
+  <div class="toast" id="toast"></div>
 
   <script>
-    // Particles
+    /* ── PARTICLES ── */
     const canvas = document.getElementById('particles');
     const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth; canvas.height = window.innerHeight;
     window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
-    const pts = Array.from({length:60},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,size:Math.random()*1.5+.5,alpha:Math.random()*.4+.08,pulse:Math.random()*Math.PI*2}));
-    function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.pulse+=.02;if(p.x<0||p.x>canvas.width)p.vx*=-1;if(p.y<0||p.y>canvas.height)p.vy*=-1;const a=p.alpha*(.7+.3*Math.sin(p.pulse));ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(255,70,85,${a})`;ctx.fill();});requestAnimationFrame(draw);}
-    draw();
+    const pts = Array.from({length:55},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,vx:(Math.random()-.5)*.4,vy:(Math.random()-.5)*.4,size:Math.random()*1.5+.5,alpha:Math.random()*.4+.08,pulse:Math.random()*Math.PI*2}));
+    function drawParticles(){ctx.clearRect(0,0,canvas.width,canvas.height);pts.forEach(p=>{p.x+=p.vx;p.y+=p.vy;p.pulse+=.02;if(p.x<0||p.x>canvas.width)p.vx*=-1;if(p.y<0||p.y>canvas.height)p.vy*=-1;const a=p.alpha*(.7+.3*Math.sin(p.pulse));ctx.beginPath();ctx.arc(p.x,p.y,p.size,0,Math.PI*2);ctx.fillStyle=`rgba(255,70,85,${a})`;ctx.fill();});requestAnimationFrame(drawParticles);}
+    drawParticles();
 
-    // Glitch
+    /* ── GLITCH ── */
     const logo = document.getElementById('logo');
     function triggerGlitch(){logo.classList.add('glitch');setTimeout(()=>logo.classList.remove('glitch'),200);setTimeout(triggerGlitch,4000+Math.random()*5000);}
     setTimeout(triggerGlitch, 2000);
 
-    // Clock
+    /* ── CLOCK ── */
     function updateClock(){
       const now = new Date();
       document.getElementById('clock').textContent =
-        String(now.getHours()).padStart(2,'0') + ':' +
-        String(now.getMinutes()).padStart(2,'0') + ':' +
+        String(now.getHours()).padStart(2,'0')+':'+
+        String(now.getMinutes()).padStart(2,'0')+':'+
         String(now.getSeconds()).padStart(2,'0');
     }
     updateClock(); setInterval(updateClock, 1000);
 
-    // Quotes
+    /* ── STREAK (localStorage) ── */
+    function updateStreak(){
+      const today = new Date().toDateString();
+      const lastVisit = localStorage.getItem('tr_last_visit');
+      let streak = parseInt(localStorage.getItem('tr_streak') || '0');
+      if(lastVisit === today){
+        // same day, streak stays
+      } else if(lastVisit){
+        const diff = (new Date(today) - new Date(lastVisit)) / 86400000;
+        streak = diff <= 1 ? streak + 1 : 1;
+      } else {
+        streak = 1;
+      }
+      localStorage.setItem('tr_streak', streak);
+      localStorage.setItem('tr_last_visit', today);
+      document.getElementById('streakVal').textContent = streak;
+    }
+    updateStreak();
+
+    /* ── QUOTES ── */
     const quotes = [
       {text:"The mission doesn't end until every task is eliminated.", author:"— Kingdom Corp HQ"},
       {text:"Discipline is doing what you hate to do, but doing it like you love it.", author:"— Mike Tyson"},
@@ -397,40 +559,110 @@
       {text:"Every completed task is a step toward Radiant.", author:"— TASKRANT HQ"},
       {text:"Don't watch the clock; do what it does — keep going.", author:"— Sam Levenson"},
       {text:"Champions keep playing until they get it right.", author:"— Billie Jean King"},
+      {text:"Hesitation is the enemy of completion.", author:"— TASKRANT HQ"},
     ];
     const q = quotes[Math.floor(Math.random() * quotes.length)];
     document.getElementById('quoteText').textContent = q.text;
     document.getElementById('quoteAuthor').textContent = q.author;
 
-    // Filter
-    function filterTasks(type, btn) {
+    /* ── FILTER ── */
+    function filterTasks(type, btn){
       document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       document.querySelectorAll('.task-item').forEach(item => {
-        const done = item.classList.contains('completed');
-        item.style.display = type === 'all' ? '' : (type === 'done' ? (done ? '' : 'none') : (done ? 'none' : ''));
+        const done = item.dataset.done === '1';
+        item.style.display = type==='all'?'' : (type==='done'?(done?'':'none'):(done?'none':''));
       });
     }
 
-    // Toast
-    function showToast(msg, type='') {
+    /* ── TOAST ── */
+    function showToast(msg, type=''){
       const t = document.getElementById('toast');
-      t.textContent = msg; t.className = 'toast' + (type ? ' '+type : '') + ' show';
-      setTimeout(() => t.classList.remove('show'), 2500);
+      t.textContent = msg;
+      t.className = 'toast' + (type?' '+type:'') + ' show';
+      setTimeout(()=>t.classList.remove('show'), 2600);
     }
 
-    // Add btn
-    document.getElementById('addBtn').addEventListener('click', function(e) {
-      if (document.getElementById('addInput').value.trim()) showToast('Mission deployed! 🎯', 'success');
+    /* ── ACTIVITY FEED ── */
+    const activity = [];
+    function logActivity(type, title){
+      const typeMap = {complete:{label:'Completed', cls:'type-complete', icon:'fa-circle-check'}, active:{label:'Reopened', cls:'type-add', icon:'fa-rotate-left'}, add:{label:'Added', cls:'type-add', icon:'fa-plus'}, kill:{label:'Eliminated', cls:'type-delete', icon:'fa-xmark'}};
+      const t = typeMap[type] || typeMap.add;
+      const now = new Date();
+      const timeStr = String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+      activity.unshift({type:t, title, time:timeStr});
+      if(activity.length > 5) activity.pop();
+      renderActivity();
+    }
+    function renderActivity(){
+      const el = document.getElementById('activityList');
+      if(!activity.length){ el.innerHTML='<div class="act-empty">No activity yet this session</div>'; return; }
+      el.innerHTML = activity.map(a=>`
+        <div class="act-item ${a.type.cls}">
+          <i class="fa-solid ${a.type.icon} act-icon"></i>
+          <div class="act-body">
+            <div class="act-text">${a.type.label}: ${escHtml(a.title)}</div>
+            <div class="act-time">Today ${a.time}</div>
+          </div>
+        </div>`).join('');
+    }
+    function escHtml(s){ const d=document.createElement('div');d.textContent=s;return d.innerHTML; }
+
+    /* ── KILL CONFIRM ── */
+    function confirmKill(e, link, title){
+      if(!confirm('Eliminate mission: "' + title + '"?')){ e.preventDefault(); return false; }
+      logActivity('kill', title);
+      showToast('Mission eliminated.', '');
+      return true;
+    }
+
+    /* ── INLINE EDIT ── */
+    function startEdit(id){
+      document.getElementById('title-'+id).style.display='none';
+      const inp = document.getElementById('edit-'+id);
+      inp.style.display='block'; inp.focus(); inp.select();
+      document.getElementById('editBtn-'+id).style.display='none';
+      document.getElementById('saveBtn-'+id).style.display='inline-flex';
+    }
+    function saveEdit(id){
+      const inp = document.getElementById('edit-'+id);
+      const newTitle = inp.value.trim();
+      if(!newTitle){ showToast('Title cannot be empty.', 'warn'); return; }
+
+      fetch(`/edit/${id}/`, {
+        method:'POST',
+        headers:{'Content-Type':'application/x-www-form-urlencoded','X-CSRFToken': getCsrf()},
+        body:`title=${encodeURIComponent(newTitle)}`
+      }).then(r=>{
+        if(r.ok){
+          document.getElementById('title-'+id).textContent = newTitle;
+          inp.value = newTitle;
+          showToast('Mission updated.', 'success');
+        } else {
+          showToast('Save failed — add edit URL to Django.', 'warn');
+        }
+      }).catch(()=>{ showToast('Save failed — add edit URL to Django.', 'warn'); });
+
+      document.getElementById('title-'+id).style.display='';
+      inp.style.display='none';
+      document.getElementById('editBtn-'+id).style.display='';
+      document.getElementById('saveBtn-'+id).style.display='none';
+    }
+    function getCsrf(){ return document.cookie.split(';').map(c=>c.trim()).find(c=>c.startsWith('csrftoken='))?.split('=')[1]||''; }
+
+    /* ── ADD BTN ── */
+    document.getElementById('addBtn').addEventListener('click', function(e){
+      const val = document.getElementById('addInput').value.trim();
+      if(val){ logActivity('add', val); showToast('Mission deployed!', 'success'); }
       const r=document.createElement('span'); r.className='ripple';
       const rect=this.getBoundingClientRect();
       r.style.left=(e.clientX-rect.left)+'px'; r.style.top=(e.clientY-rect.top)+'px';
       this.appendChild(r); setTimeout(()=>r.remove(),600);
     });
 
-    // Enter key
-    document.getElementById('addInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') { document.getElementById('addForm').submit(); }
+    /* ── ENTER KEY ── */
+    document.getElementById('addInput').addEventListener('keydown', e=>{
+      if(e.key==='Enter'){ document.getElementById('addForm').submit(); }
     });
   </script>
 </body>
