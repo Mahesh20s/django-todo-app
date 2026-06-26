@@ -50,7 +50,7 @@ TaskRant is a full-stack todo web app built with Django, styled with a Valorant-
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/taskrant.git
-cd taskrant
+cd todo
 ```
 
 ### 2. Create a virtual environment
