@@ -141,7 +141,7 @@ Your rank is based on task completion rate:
 
 ## Author
 
-Built by **{{ your name }}** — inspired by Valorant's tactical aesthetic.
+Built by **Mahesh Shinde** — inspired by Valorant's tactical aesthetic.
 
 ---
 
